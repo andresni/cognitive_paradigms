@@ -1,0 +1,155 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Feb 20 15:45:29 2017
+
+Global-local paradigm
+
+@author: labpc
+"""
+
+
+from psychopy import visual, core, event #, sound,
+from numpy.random import rand as ran
+from numpy.random import randint as rint
+from numpy import sqrt
+import numpy as np
+import time
+import csv
+import pygame
+import matplotlib.pyplot as pl
+import serial 
+import scikits.audiolab as audio
+#ser = serial.Serial(0, 19200, timeout=1)  # open first serial port
+#ser = serial.Serial('/dev/ttyS1', 19200, timeout=1)#or something like this for Mac/Linux machines
+
+# Generating functions
+
+def GenerateTone(rate,duration,freqs,amps):
+    numSamples = np.floor(duration*rate/1000)
+    t = [i*duration/numSamples for i in range(int(numSamples))]
+    Tone = [np.sin(2*np.pi*freqs[0]*i)*amps[0] for i in t]
+    for i in range(1,len(freqs)):
+        Tone = [Tone[j]+np.sin(2*np.pi*freqs[i]*t[j])*amps[i] for j in range(int(numSamples))]
+    Tone = [i/(0.999*np.max(np.abs(Tone))) for i in Tone]            
+    return Tone
+    
+
+# Make directory for saving data
+date = time.strftime("%Y%m%d")
+Participant = raw_input("Please enter participant number: ")
+Session = raw_input("Please enter session number: ")
+dirname = date + '_' + Participant + '_' + Session
+
+
+# Generate sounds
+print('Generating Tones')
+sf = 44100   # sampling frequency of sound (Hz) - make sure this corresponds to audio card frequency
+sDuration = 50 # sound duration (ms)
+Freqs_low = [350, 700,  1400] # low tone frequencies
+Freqs_high = [500, 1000, 2000] # high tone frequencies
+sAmps = [1, 1/2.0, 1/4.0] # amplitude frequencies
+
+t_ramp = 0.007 # 7ms ramp up
+n_ramp = int(t_ramp*sf) # samples of ramp
+n_sound = int(sDuration*sf/1000)
+
+scaling = [] # scaling 
+scaling.extend([np.sin(i*np.pi/(2.0*n_ramp)) for i in range(1,n_ramp+1)])
+scaling.extend(range(1,2)*(n_sound-2*n_ramp))
+scaling.extend([np.sin((n_ramp-i)*np.pi/(2.0*n_ramp)) for i in range(1,n_ramp+1)])
+x = range(1,len(scaling)+1)    
+
+Tone_low = GenerateTone(sf,sDuration,Freqs_low,sAmps)
+Tone_high = GenerateTone(sf,sDuration,Freqs_high,sAmps)
+Tone_low = [Tone_low[i]*scaling[i] for i in range(len(Tone_low))]
+Tone_high = [Tone_high[i]*scaling[i] for i in range(len(Tone_high))]
+
+stimulus = []
+stimulus.append(Tone_low)
+stimulus.append(Tone_high)
+
+sounds = []
+sounds.append
+             
+# Setting up experiment
+blocks = 2 # 2 blocks of each experimental condition
+conditions = 4 # 4 different conditions (to cover all versions of deviant/standard pairs)
+
+TrialBreak = 1. # break between trials
+TrialJitter = 0. # jitter in time between trials
+ToneBreak = 0.150 # break between tones
+ToneJitter = 0. # jitter in time before last tone
+BlockBreak = 5 # break between blocks
+
+minHabit = 10 # min number of habituation trials
+maxHabit = 15 # max number of habituation trials
+minDeviants = 22 # minimum number of deviants in a block
+maxDeviants = 30 # maximum number of deviants in a block
+
+
+IDs = range(conditions)*blocks # all conditions and blocks in a list to be randomized
+blockID = list(np.random.choice(IDs,len(IDs),replace=False))
+
+# generating stimulus trains
+Sequences = []
+for i in range(blocks*conditions):
+    
+    if blockID[i]==0:
+        standard = [0,0,0,0,0]
+        deviant = [0,0,0,0,1]
+    elif blockID[i] == 1:
+        standard = [1,1,1,1,1]
+        deviant = [1,1,1,1,0]
+    elif blockID[i] == 2:
+        standard = [0,0,0,0,1]
+        deviant = [0,0,0,0,0]
+    elif blockID[i] == 3:
+        standard = [1,1,1,1,0]
+        deviant = [1,1,1,1,1]
+    
+    
+    numHabit = list(rint(minHabit,maxHabit,1)) # number if standards as habituation
+    numDeviants = list(rint(minDeviants,maxDeviants,1)) # number of deviants in the block      
+    numStandards = numDeviants*2 # making sure there is a 80/20 ratio. 
+    # multiplying by two because 2 standards are added after every deviant
+    stims = range(1)*numDeviants[0]
+    stims.extend(range(1,2)*numStandards[0])
+    randomized = list(np.random.choice(stims,len(stims),replace=False))
+    
+    stimuli = []
+    stimuli.append(standard)
+    for j in range(1,numHabit[0]):
+        stimuli.append(standard)
+    for j in range(len(randomized)):
+        if randomized[j]:
+            stimuli.append(deviant)
+            stimuli.append(standard)
+            stimuli.append(standard)
+        else:
+            stimuli.append(standard)
+            
+    Sequences.append(stimuli)
+    # dimensions are blocks X trials x tones
+    # e.g. sequences[1] contains the trials for block nr 2
+    # and sequences[1][1] contains the tones for trial 2 in block 2
+    
+    
+totTrials = len(Sequences) + sum(len(Sequences[i]) for i in range(len(Sequences)))    
+totTime = blocks*BlockBreak+TrialBreak*totTrials+totTrials
+print('the protocol will take approximately ' + str(int(totTime/60)) + ' minutes.') 
+
+
+# Playing sounds
+#for i in range(blocks*conditions):
+    
+
+
+# writing stuff to serial port
+'''   
+ser.write('someCommand')
+line = ser.readline()   # read a '\n' terminated line
+ser.close()
+'''
+
+

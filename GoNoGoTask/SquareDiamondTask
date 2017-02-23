@@ -1,0 +1,185 @@
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Dec 13 16:35:11 2016
+
+@author: labpc
+"""
+
+from psychopy import visual, core, event
+from numpy.random import rand as ran
+from numpy import sqrt
+import time
+import numpy
+import csv
+
+date = time.strftime("%Y%m%d")
+
+# setting stimulation parameters
+blocks = 15 # originally 15
+numStim = 20 #pr block, originally 20
+squareProb = 0.8 # originally 0.8
+
+stimTime = 0.5  # originally 0.5
+blankTime = 0.3  # originally 0.3 
+jitter = 0.3  # originally 0.3
+
+h = 0.8
+w = 0.8
+d = sqrt(h**2+w**2)
+square = ((-h,-w),(-h,w),(h,w),(h,-w ))
+diamond = ((0,d),(-d,0),(0,-d),(d,0))
+lw = 5
+
+responseTimes = numpy.zeros(numStim*blocks)
+
+output = []
+
+# dependent variables
+stims = ran(numStim*blocks)
+squareStims = stims<squareProb
+SS = list(squareStims)
+squareIdx  = [i for i in range(0,len(SS)) if SS[i]]
+diamondIdx = [i for i in range(0,len(SS)) if not(SS[i])]
+stimulus = list(stims)
+for i in squareIdx: stimulus[i] = 1
+for i in diamondIdx: stimulus[i] = 2
+
+# getting user input
+Participant = raw_input("Please enter participant number: ")
+Session = raw_input("Please enter session number: ")
+
+
+#create a window
+mywin = visual.Window([1300,700],monitor="testMonitor", units="deg",color=[-1.0,-1.0,-1.0])
+fixation = visual.GratingStim(win=mywin, size=0.2, pos=[0,0], sf=0, rgb=-1)
+
+#drawing initial window
+while True:
+    stim1 = visual.TextStim(win=mywin,text='Welcome!',pos=(0.0,1.5))
+    stim2 = visual.TextStim(win=mywin,
+            text='Please, press a button',pos=(0.0,-1.5))
+    stim3 = visual.TextStim(win=mywin,
+            text='to continute.',pos=(0.0,-3.0))
+    stim1.draw()
+    stim2.draw()
+    stim3.draw()
+    mywin.flip()
+    if len(event.getKeys())>0: break
+
+# giving information to participants
+info = ['In this experiment we will test your reaction time, as well as your ability to cancel your initial response. You will be shown two different shapes in rapid succession. \n\nYour goal is to press space as quickly as possible whenever you see a square. however, when you see a diamond you should not press any button.\n\n If you have any questions, please ask us. If not, press any button to continue the experiment.']
+while True:
+    stim = visual.TextStim(win=mywin,text='Instructions:',pos=(0.0,7.0),height=1.)
+    stim1 = visual.TextStim(win=mywin,text=info[0],pos=(0.0,3.0),height=0.5)
+    stim2 = visual.ShapeStim(win=mywin, vertices = square,pos=(-4.0,-3.0),fillColor='black', lineWidth=lw)
+    stim3 = visual.ShapeStim(win=mywin, vertices = diamond,pos=(4.0,-3.0),fillColor='black', lineWidth=lw)
+    stim4 = visual.TextStim(win=mywin,text='press when you see this',pos=(-4.0,-5.0),height=0.5)
+    stim5 = visual.TextStim(win=mywin,text='not when you see this',pos=(4.0,-5.0),height=0.5)
+    stim.draw()
+    stim1.draw()
+    stim2.draw()
+    stim3.draw()
+    stim4.draw()
+    stim5.draw()
+    mywin.flip()
+    if len(event.getKeys())>0: break
+
+# starting experiment
+stim1 = visual.TextStim(win=mywin,text='get ready ...',pos=(0.0,1.0))
+stim2 = visual.TextStim(win=mywin,text='3',pos=(0.0,-1.0))
+stim1.draw()
+stim2.draw()
+mywin.flip()
+time.sleep(1)
+
+stim1 = visual.TextStim(win=mywin,text='get ready ...',pos=(0.0,1.0))
+stim2 = visual.TextStim(win=mywin,text='2',pos=(0.0,-1.0))
+stim1.draw()
+stim2.draw()
+mywin.flip()
+time.sleep(1)
+
+stim1 = visual.TextStim(win=mywin,text='get ready ...',pos=(0.0,1.0))
+stim2 = visual.TextStim(win=mywin,text='1',pos=(0.0,-1.0))
+stim1.draw()
+stim2.draw()
+mywin.flip()
+time.sleep(1)
+
+DynamicBlockUpdate = False
+DynamicTrialUpdate = False
+    
+for i in range(0,blocks):   
+    # Update parameters for the block
+    if DynamicBlockUpdate:
+        stimeTime = stimTime
+        blankTime = blankTime
+        jitter = jitter
+        
+    #draw the stimuli and update the window
+    for a in range(0,numStim): 
+        # Update parameters for the trial
+        if DynamicTrialUpdate:
+            stimeTime = stimTime
+            blankTime = blankTime
+            jitter = jitter 
+
+        if squareStims[blocks*(i-1)+a]:
+            stim = visual.ShapeStim(
+                            win=mywin, vertices = square,fillColor='black', lineWidth=lw)
+        else:
+            stim = visual.ShapeStim(
+                            win=mywin, vertices = diamond,fillColor='black', lineWidth=lw)
+      
+        # Presenting stimulus 
+        startTime = time.time()
+        t = time.time()+stimTime
+        while time.time()<t:
+            stim.draw()
+            fixation.draw()
+            mywin.flip()
+            if len(event.getKeys())>0:  
+                responseTimes[a]=time.time()-startTime
+                break
+            event.clearEvents()
+      
+        trialJit = ran()*jitter
+        t = time.time()+blankTime+trialJit
+        while time.time()<t:
+            fixation.draw()
+            mywin.flip()
+            if len(event.getKeys())>0:  
+                responseTimes[a]=time.time()-startTime
+                event.clearEvents()
+      
+                    #output.append([])
+        output.append([int(date), int(Participant), int(Session),
+                        i, a, stimulus[a], responseTimes[a],
+                        stimTime,blankTime,trialJit])
+      #  if len(event.getKeys())>0: break
+      #  
+        
+errors = sum([1 for i in diamondIdx if output[i][5]>0.0])
+#txt = 'You made '+str(errors)+' errors...'
+txt = 'Thank you for participating :)'
+
+#drawing initial window
+while True:
+    stim1 = visual.TextStim(win=mywin,text=txt)
+    stim1.draw()
+    mywin.flip()
+    if len(event.getKeys())>0: break
+
+print output
+
+
+# write it
+with open('Go-Nogo_data.csv', 'a') as csvfile:
+    writer = csv.writer(csvfile)
+    [writer.writerow(r) for r in output]
+     
+    
+    
+#cleanup
+mywin.close()

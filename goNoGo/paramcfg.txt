@@ -1,0 +1,21 @@
+% Use this file to define some parameters
+% Importantly, the duration of time intervals should be in seconds
+%   - MAXRT: maximum latency of a response
+%   - FIX: presentation duration of fixation cross between trials
+%   - SPT: presentation duration of the signal
+%   - PAUSETM: how many seconds for the break
+%   - SSD: jitterfactor - 1=0-1000ms, 2=0-500ms, 10=0-99ms, etc
+%   - NBLOCKS: the number of trials/6 - 1/6 of the number of trials you want.
+%               you get 1.5 stop trials per NBLOCKS you have.
+%   - PRIOR: On windows, There are 3 priority levels available,
+%            levels 0, 1, and 2. Level 0 is "normal priority level", level 1 is "high
+%            priority level", and level 2 is "real time priority level"
+% Separate the parameter and the value with a white space
+% Jitter thingy thingy yes - use for variable difficulty as well!! 
+MAXRT 0.7	
+FIX 0.2	
+SPT 0.300	
+PAUSETM 0 		
+SSD 3 	
+NBLOCKS 25
+PRIOR 2

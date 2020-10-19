@@ -1,0 +1,5 @@
+Your main task is to press "space" when a WHITE SQUARE appears at
+the screen. Do not press any button when you see a WHITE RHOMBUS.
+The task lasts for aproximate 2 minutes.
+Please respond as quickly as you can to the WHITE SQUARES, while
+not responding to the WHITE ROMBUSES.

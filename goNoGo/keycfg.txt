@@ -1,0 +1,13 @@
+% Use this file to define the response keys.
+% You have to define the following keys:
+%   - left key
+%   - right key
+%   - key for double-response
+%   - abort (escape key)
+% Separate the name and key using a tab.
+% You can use KbName('KeyNamesOSX') or KbName('KeyNamesWindows') 
+% to check the names of all the keys of the keyboard if needed
+LEFT    c
+RIGHT   space
+DOUBLE  space 
+ESCAPE q
